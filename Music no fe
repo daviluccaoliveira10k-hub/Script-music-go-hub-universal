@@ -1,0 +1,356 @@
+-- LocalScript em StarterPlayer > StarterPlayerScripts
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local SoundService = game:GetService("SoundService")
+
+local player = Players.LocalPlayer
+
+-- ===== BLOCO 3D =====
+local part = Instance.new("Part")
+part.Name = "MusicGoHub"
+part.Anchored = true
+part.CanCollide = false
+part.CanQuery = true
+part.CanTouch = false
+part.Size = Vector3.new(10, 7, 0.5)
+part.Color = Color3.fromRGB(25, 25, 35)
+part.Material = Enum.Material.SmoothPlastic
+part.TopSurface = Enum.SurfaceType.Smooth
+part.BottomSurface = Enum.SurfaceType.Smooth
+part.Parent = workspace
+
+-- ===== GUI DO BLOCO =====
+local gui = Instance.new("SurfaceGui")
+gui.Face = Enum.NormalId.Front
+gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+gui.PixelsPerStud = 100
+gui.LightInfluence = 0
+gui.Adornee = part
+gui.Parent = part
+
+-- ===== CABEÇALHO: AVATAR + NOME =====
+local header = Instance.new("Frame")
+header.Size = UDim2.new(1, -20, 0, 90)
+header.Position = UDim2.new(0, 10, 0, 10)
+header.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+header.BorderSizePixel = 0
+header.Parent = gui
+
+local headerCorner = Instance.new("UICorner")
+headerCorner.CornerRadius = UDim.new(0, 8)
+headerCorner.Parent = header
+
+-- Avatar
+local avatarFrame = Instance.new("Frame")
+avatarFrame.Size = UDim2.new(0, 70, 0, 70)
+avatarFrame.Position = UDim2.new(0, 10, 0, 10)
+avatarFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+avatarFrame.BorderSizePixel = 0
+avatarFrame.Parent = header
+
+local avatarCorner = Instance.new("UICorner")
+avatarCorner.CornerRadius = UDim.new(1, 0)
+avatarCorner.Parent = avatarFrame
+
+local avatarImg = Instance.new("ImageLabel")
+avatarImg.Size = UDim2.new(1, 0, 1, 0)
+avatarImg.BackgroundTransparency = 1
+avatarImg.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+avatarImg.Parent = avatarFrame
+
+local imgCorner = Instance.new("UICorner")
+imgCorner.CornerRadius = UDim.new(1, 0)
+imgCorner.Parent = avatarImg
+
+-- Nome do player
+local nameLabel = Instance.new("TextLabel")
+nameLabel.Size = UDim2.new(1, -100, 0, 40)
+nameLabel.Position = UDim2.new(0, 90, 0, 15)
+nameLabel.BackgroundTransparency = 1
+nameLabel.Text = player.DisplayName
+nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+nameLabel.TextScaled = true
+nameLabel.Font = Enum.Font.GothamBold
+nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+nameLabel.Parent = header
+
+-- @username
+local userLabel = Instance.new("TextLabel")
+userLabel.Size = UDim2.new(1, -100, 0, 25)
+userLabel.Position = UDim2.new(0, 90, 0, 55)
+userLabel.BackgroundTransparency = 1
+userLabel.Text = "@" .. player.Name
+userLabel.TextColor3 = Color3.fromRGB(150, 150, 170)
+userLabel.TextScaled = true
+userLabel.Font = Enum.Font.Gotham
+userLabel.TextXAlignment = Enum.TextXAlignment.Left
+userLabel.Parent = header
+
+-- Carrega o avatar
+task.spawn(function()
+	local success, image = pcall(function()
+		return Players:GetUserThumbnailAsync(
+			player.UserId,
+			Enum.ThumbnailType.HeadShot,
+			Enum.ThumbnailSize.Size100x100
+		)
+	end)
+	if success then
+		avatarImg.Image = image
+	end
+end)
+
+-- Atualiza nome se mudar
+player:GetPropertyChangedSignal("DisplayName"):Connect(function()
+	nameLabel.Text = player.DisplayName
+end)
+
+-- ===== TÍTULO =====
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -20, 0, 55)
+title.Position = UDim2.new(0, 10, 0, 110)
+title.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+title.BorderSizePixel = 0
+title.Text = "Músicas go Hub"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+title.Parent = gui
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 6)
+titleCorner.Parent = title
+
+-- ===== TEXTBOX =====
+local textBox = Instance.new("TextBox")
+textBox.Size = UDim2.new(1, -20, 0, 55)
+textBox.Position = UDim2.new(0, 10, 0, 175)
+textBox.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
+textBox.BorderSizePixel = 0
+textBox.Text = ""
+textBox.PlaceholderText = "Botar ID de música..."
+textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+textBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+textBox.TextScaled = true
+textBox.Font = Enum.Font.Gotham
+textBox.ClearTextOnFocus = false
+textBox.Parent = gui
+
+local tbCorner = Instance.new("UICorner")
+tbCorner.CornerRadius = UDim.new(0, 6)
+tbCorner.Parent = textBox
+
+-- ===== BOTÃO TOCAR =====
+local playBtn = Instance.new("TextButton")
+playBtn.Size = UDim2.new(0.5, -15, 0, 60)
+playBtn.Position = UDim2.new(0, 10, 0, 240)
+playBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+playBtn.BorderSizePixel = 0
+playBtn.Text = "Tocar"
+playBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+playBtn.TextScaled = true
+playBtn.Font = Enum.Font.GothamBold
+playBtn.Parent = gui
+
+local pbCorner = Instance.new("UICorner")
+pbCorner.CornerRadius = UDim.new(0, 6)
+pbCorner.Parent = playBtn
+
+-- ===== BOTÃO PARAR =====
+local stopBtn = Instance.new("TextButton")
+stopBtn.Size = UDim2.new(0.5, -15, 0, 60)
+stopBtn.Position = UDim2.new(0.5, 5, 0, 240)
+stopBtn.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
+stopBtn.BorderSizePixel = 0
+stopBtn.Text = "Parar"
+stopBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+stopBtn.TextScaled = true
+stopBtn.Font = Enum.Font.GothamBold
+stopBtn.Parent = gui
+
+local sbCorner = Instance.new("UICorner")
+sbCorner.CornerRadius = UDim.new(0, 6)
+sbCorner.Parent = stopBtn
+
+-- ===== VISUALIZADOR =====
+local visFrame = Instance.new("Frame")
+visFrame.Size = UDim2.new(1, -20, 0, 365)
+visFrame.Position = UDim2.new(0, 10, 0, 315)
+visFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+visFrame.BorderSizePixel = 0
+visFrame.Parent = gui
+
+local visCorner = Instance.new("UICorner")
+visCorner.CornerRadius = UDim.new(0, 6)
+visCorner.Parent = visFrame
+
+local NUM_BARS = 18
+local bars = {}
+local barLayout = Instance.new("UIListLayout")
+barLayout.FillDirection = Enum.FillDirection.Horizontal
+barLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+barLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+barLayout.Padding = UDim.new(0, 6)
+barLayout.SortOrder = Enum.SortOrder.LayoutOrder
+barLayout.Parent = visFrame
+
+for i = 1, NUM_BARS do
+	local bar = Instance.new("Frame")
+	bar.Size = UDim2.new(0, 40, 0, 6)
+	bar.Position = UDim2.new(0, 0, 1, -6)
+	bar.AnchorPoint = Vector2.new(0, 1)
+	bar.BackgroundColor3 = Color3.fromRGB(0, 200, 120)
+	bar.BorderSizePixel = 0
+	bar.LayoutOrder = i
+	bar.Parent = visFrame
+
+	local bc = Instance.new("UICorner")
+	bc.CornerRadius = UDim.new(0, 3)
+	bc.Parent = bar
+
+	bars[i] = bar
+end
+
+-- ===== SOM =====
+local sound = Instance.new("Sound")
+sound.Volume = 1
+sound.Parent = SoundService
+
+playBtn.MouseButton1Click:Connect(function()
+	local id = tonumber(textBox.Text)
+	if not id then return end
+	sound:Stop()
+	sound.SoundId = "rbxassetid://" .. id
+	sound:Play()
+end)
+
+stopBtn.MouseButton1Click:Connect(function()
+	sound:Stop()
+end)
+
+-- ===== ANIMAÇÃO SINCRONIZADA COM A MÚSICA =====
+local heights = {}
+local targets = {}
+local phases = {}
+for i = 1, NUM_BARS do
+	heights[i] = 6
+	targets[i] = 6
+	phases[i] = math.random() * math.pi * 2
+end
+
+local MAX_H = 340
+local MIN_H = 6
+
+RunService.RenderStepped:Connect(function(dt)
+	local playing = sound.IsPlaying and sound.Playing
+	local loudness = 0
+
+	if playing then
+		loudness = sound.PlaybackLoudness / 1000
+	end
+
+	for i = 1, NUM_BARS do
+		if playing then
+			local center = NUM_BARS / 2
+			local distFromCenter = math.abs(i - center) / center
+			local base = (1 - distFromCenter * 0.5)
+
+			phases[i] = phases[i] + dt * (3 + i * 0.3)
+			local wave = (math.sin(phases[i]) * 0.5 + 0.5) * 0.4 + 0.6
+
+			targets[i] = loudness * base * wave * MAX_H
+		else
+			targets[i] = MIN_H
+		end
+
+		-- sobe rápido, cai devagar
+		local speed = targets[i] > heights[i] and 0.7 or 0.15
+		heights[i] = heights[i] + (targets[i] - heights[i]) * speed
+
+		local bar = bars[i]
+		bar.Size = UDim2.new(0, 40, 0, math.max(MIN_H, heights[i]))
+
+		local ratio = math.clamp(heights[i] / MAX_H, 0, 1)
+		local r = math.clamp(ratio * 2, 0, 1)
+		local g = math.clamp(2 - ratio * 2, 0, 1)
+		bar.BackgroundColor3 = Color3.new(r, g, 0.2)
+	end
+end)
+
+-- ===== SCREEN GUI: MENU =====
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "MusicGoHubMenu"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local menuBtn = Instance.new("TextButton")
+menuBtn.Size = UDim2.new(0, 60, 0, 60)
+menuBtn.Position = UDim2.new(1, -80, 0, 20)
+menuBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+menuBtn.BorderSizePixel = 0
+menuBtn.Text = ""
+menuBtn.AutoButtonColor = true
+menuBtn.Parent = screenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = menuBtn
+
+for i = 1, 3 do
+	local bar = Instance.new("Frame")
+	bar.Size = UDim2.new(0, 36, 0, 4)
+	bar.Position = UDim2.new(0.5, -18, 0, 10 + (i - 1) * 12)
+	bar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	bar.BorderSizePixel = 0
+	bar.Parent = menuBtn
+
+	local bc = Instance.new("UICorner")
+	bc.CornerRadius = UDim.new(1, 0)
+	bc.Parent = bar
+end
+
+-- ===== SEGUIR / FIXO =====
+local following = true
+
+local function getHRP()
+	local char = player.Character
+	if not char then return nil end
+	return char:FindFirstChild("HumanoidRootPart")
+end
+
+local function snapToFront()
+	local hrp = getHRP()
+	if not hrp then return end
+	part.Position = (hrp.CFrame * CFrame.new(0, 1, -9)).Position
+end
+snapToFront()
+
+player.CharacterAdded:Connect(function()
+	task.wait(0.2)
+	snapToFront()
+end)
+
+menuBtn.MouseButton1Click:Connect(function()
+	following = not following
+	local color = following and Color3.fromRGB(0, 220, 120) or Color3.fromRGB(180, 180, 180)
+	for _, bar in ipairs(menuBtn:GetChildren()) do
+		if bar:IsA("Frame") then
+			bar.BackgroundColor3 = color
+		end
+	end
+	if following then snapToFront() end
+end)
+
+RunService.RenderStepped:Connect(function()
+	local hrp = getHRP()
+	if not hrp then return end
+
+	if following then
+		local targetPos = (hrp.CFrame * CFrame.new(0, 1, -9)).Position
+		part.Position = part.Position:Lerp(targetPos, 0.15)
+	end
+
+	local lookAt = hrp.Position + Vector3.new(0, 1, 0)
+	part.CFrame = CFrame.lookAt(part.Position, lookAt)
+end)
